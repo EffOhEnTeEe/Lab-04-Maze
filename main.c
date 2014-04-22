@@ -31,7 +31,7 @@
 
  #define PERIPHERAL_CLOCK 10000000
 
-enum states { init } state;
+enum states { init, btn1, btn2, btn3 } state;
 
 /*****************************************
 Global Variables
@@ -53,6 +53,8 @@ void main() {
     DelayInit();
     OledInit();
 
+    DDPCONbits.JTAGEN = 0;		// Disable JTAG controller so BTN3 can be used as input
+
     OpenTimer2(T2_ON            |
 	           T2_IDLE_CON      |
 	           T2_SOURCE_INT    |
@@ -66,14 +68,72 @@ void main() {
     INTConfigureSystem(INT_SYSTEM_CONFIG_MULT_VECTOR);
     INTEnableInterrupts();
 
-    state = init;
-    DisplaySplashScreen();
+    DisplaySplashScreen();		// Print splash screen
+    state = init;				// Set state machine to init
 
     while (1) {
 
         switch(state) {
         	case init: {
+        		if(buttonOnePress()) {
+        			state = btn1;
+        		}
 
+        		if(buttonTwoPress()) {
+        			state = btn2;
+        		}
+
+        		if(buttonThreePress()) {
+        			state = btn3;
+        		}
+        	}
+        	break;
+
+        	case btn1: {
+        		OledClearBuffer();
+        		OledSetCursor(0,0);
+        		OledPutString("Button 1 Pressed");
+        		OledUpdate();
+
+        		if(buttonTwoPress()) {
+        			state = btn2;
+        		}
+
+        		if(buttonThreePress()) {
+        			state = btn3;
+        		}
+        	}
+        	break;
+
+        	case btn2: {
+        		OledClearBuffer();
+        		OledSetCursor(0,0);
+        		OledPutString("Button 2 Pressed");
+        		OledUpdate();
+
+        		if(buttonOnePress()) {
+        			state = btn1;
+        		}
+
+        		if(buttonThreePress()) {
+        			state = btn3;
+        		}
+        	}
+        	break;
+
+        	case btn3: {
+        		OledClearBuffer();
+        		OledSetCursor(0,0);
+        		OledPutString("Button 3 Pressed");
+        		OledUpdate();
+
+        		if(buttonOnePress()) {
+        			state = btn1;
+        		}
+
+        		if(buttonTwoPress()) {
+        			state = btn2;
+        		}
         	}
         	break;
             
