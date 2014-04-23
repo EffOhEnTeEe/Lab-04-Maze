@@ -31,7 +31,7 @@
 
  #define PERIPHERAL_CLOCK 10000000
 
-enum states { init, btn1, btn2, btn3 } state;
+enum states { init, modeSelect } state;
 
 /*****************************************
 Global Variables
@@ -75,68 +75,25 @@ void main() {
 
         switch(state) {
         	case init: {
+        		// Stay in the init stage until BTN1 is pressed then display the mode select screen
         		if(buttonOnePress()) {
-        			state = btn1;
+        			DisplayModeSelect();
+        			state = modeSelect;
+        		}
+        	}
+        	break;
+
+        	case modeSelect: {
+
+        		if(buttonOnePress()) {
+        			//state = btn2;
         		}
 
         		if(buttonTwoPress()) {
-        			state = btn2;
-        		}
-
-        		if(buttonThreePress()) {
-        			state = btn3;
+        			//state = btn3;
         		}
         	}
-        	break;
-
-        	case btn1: {
-        		OledClearBuffer();
-        		OledSetCursor(0,0);
-        		OledPutString("Button 1 Pressed");
-        		OledUpdate();
-
-        		if(buttonTwoPress()) {
-        			state = btn2;
-        		}
-
-        		if(buttonThreePress()) {
-        			state = btn3;
-        		}
-        	}
-        	break;
-
-        	case btn2: {
-        		OledClearBuffer();
-        		OledSetCursor(0,0);
-        		OledPutString("Button 2 Pressed");
-        		OledUpdate();
-
-        		if(buttonOnePress()) {
-        			state = btn1;
-        		}
-
-        		if(buttonThreePress()) {
-        			state = btn3;
-        		}
-        	}
-        	break;
-
-        	case btn3: {
-        		OledClearBuffer();
-        		OledSetCursor(0,0);
-        		OledPutString("Button 3 Pressed");
-        		OledUpdate();
-
-        		if(buttonOnePress()) {
-        			state = btn1;
-        		}
-
-        		if(buttonTwoPress()) {
-        			state = btn2;
-        		}
-        	}
-        	break;
-            
+        	break;            
         }
     }
 

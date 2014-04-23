@@ -8,6 +8,7 @@ Function Implementations
 
 void DisplaySplashScreen() {
     // Print the splash screen before starting game
+    OledClearBuffer();
     OledSetCursor(0,0);
     OledPutString("FC");
     OledSetCursor(3,1);
@@ -15,6 +16,18 @@ void DisplaySplashScreen() {
     OledSetCursor(2,2);
     OledPutString("Maze Puzzle");
     OledUpdate();
+}
+
+void DisplayModeSelect() {
+	// Print the mode select screen
+	OledClearBuffer();
+	OledSetCursor(0,0);
+	OledPutString("Enter Interface");
+	OledSetCursor(0,2);
+	OledPutString("Button 1 = SPI");
+	OledSetCursor(0,3);
+	OledPutString("Button 2 = I2C");
+	OledUpdate();
 }
 
 int buttonOnePress() {
@@ -48,4 +61,67 @@ int buttonThreePress() {
     _lastPress = cur;
     if (cur) return 1;
     return 0;
+}
+
+
+/**********************************************
+SPI Helper Function Implementations
+**********************************************/
+
+// Initializes SPI communications
+void SPIAccelInit() {
+	int garbage;
+
+   SpiChnOpen(SPI_CHANNEL4, SPI_OPEN_MSTEN |
+           	  SPI_OPEN_CKP_HIGH | SPI_OPEN_ENHBUF, 2);
+
+   SpiChnPutC(SPI_CHANNEL4, 0x80);
+
+   garbage = SpiChnGetC(SPI_CHANNEL4);
+
+   SPIAccelWriteToReg(0x2C, 0x0A);
+   SPIAccelWriteToReg(0x2D, 0x08);
+}
+
+
+int SPIAccelRead(int address) {
+	int reading;
+	PORTFCLR = BIT_12;
+	SpiChnPutC(SPI_CHANNEL4, 0x80 + address);
+	reading = SpiChnGetC(SPI_CHANNEL4);
+	SpiChnPutC(SPI_CHANNEL4, 0xFF);
+	reading = SpiChnGetC(SPI_CHANNEL4);
+	PORTFSET = BIT_12;
+
+	return reading;
+}
+
+float SPIAccelGetCoor(int address) {
+	float result;
+	int data1, data2;
+
+	data1 = SPIAccelRead(address);
+	data2 = SPIAccelRead(address + 1);
+
+	data2 = 0x0000FFFF & ( data1 | (data2 << 8) ); // Use data2 the upper 8 bits, data1 the lower 8 bits
+
+	if(data1 & 0x8000)              // Sign extension CHANGE ME
+		data1 = data1 | 0xFFFF0000;
+
+	data1 = (data1 ^ 0xFFFFFFFF) + 1; // Converting to signed magnitude CHANGE ME
+
+	result = (data1 / 256. * -1.);
+
+	return result;
+}
+
+void SPIAccelWriteToReg(int address, int data) {
+	PORTFCLR = BIT_12;
+
+	SpiChnPutC(SPI_CHANNEL4, address);
+	SpiChnGetC(SPI_CHANNEL4);
+	SpiChnPutC(SPI_CHANNEL4, data);
+	SpiChnGetC(SPI_CHANNEL4);
+
+	PORTFSET = BIT_12;
 }
