@@ -82,11 +82,10 @@ void main() {
         		if(!Init_Display_Flag) {
         			DisplaySplashScreen();		// Display the splash screen
         			Init_Display_Flag = 1;		// Set flag
+	        		
+	        		SPI_Select = 0;				// Reset flags for SPI and I2C select
+	        		I2C_Select = 0;
         		}
-
-        		// Reset flags for SPI and I2C select
-        		SPI_Select = 0;
-        		I2C_Select = 0;
 
         		// Stay in the init stage until BTN1 is pressed then display the mode select screen
         		if(buttonOnePress()) {
@@ -111,8 +110,7 @@ void main() {
         	case modeSelect: {
 
         		if(buttonOnePress()) {
-        			// SPI selected
-        			SPI_Select = 1;
+        			SPI_Select = 1;			// SPI selected
         			SPIAccelInit();
         			state = playGame;
         			OledClearBuffer();
@@ -120,8 +118,7 @@ void main() {
         		}
 
         		else if(buttonTwoPress()) {
-        			// I2C selected
-        			I2C_Select = 1;
+        			I2C_Select = 1;			// I2C selected
         			// I2C helper functions go here
         			state = playGame;
         			OledClearBuffer();
@@ -129,6 +126,8 @@ void main() {
 
         	}
         	break;
+
+        	// setup case here that will print the maze and character
 
         	case playGame: {
         		// If SPI was selected
