@@ -31,7 +31,7 @@
 
  #define PERIPHERAL_CLOCK 10000000
 
-enum states { init, modeSelect } state;
+enum states { init, modeSelect, buttonIsPressed, playGame } state;
 
 /*****************************************
 Global Variables
@@ -68,32 +68,83 @@ void main() {
     INTConfigureSystem(INT_SYSTEM_CONFIG_MULT_VECTOR);
     INTEnableInterrupts();
 
-    DisplaySplashScreen();		// Print splash screen
     state = init;				// Set state machine to init
 
     while (1) {
 
+    	if(buttonThreePress()) {
+    		state = init;
+    	}
+
         switch(state) {
         	case init: {
+
+        		if(!Init_Display_Flag) {
+        			DisplaySplashScreen();		// Display the splash screen
+        			Init_Display_Flag = 1;		// Set flag
+        		}
+
+        		// Reset flags for SPI and I2C select
+        		SPI_Select = 0;
+        		I2C_Select = 0;
+
         		// Stay in the init stage until BTN1 is pressed then display the mode select screen
         		if(buttonOnePress()) {
         			DisplayModeSelect();
-        			state = modeSelect;
+        			Init_Display_Flag = 0;			// Reset flag
+        			state = buttonIsPressed;
         		}
+
         	}
         	break;
+
+        	// Special case for the transition from init to modeSelect so that BTN1 is not read too quickly.
+        	// When that happens the mode select screen is only displayed for a brief window that doesn't
+        	// allow the user enough time to make a choice
+        	case buttonIsPressed: {
+        		int temp1 = buttonOnePress();
+                if(!temp1){
+                   state = modeSelect;
+                }
+        	}
 
         	case modeSelect: {
 
         		if(buttonOnePress()) {
-        			//state = btn2;
+        			// SPI selected
+        			SPI_Select = 1;
+        			SPIAccelInit();
+        			state = playGame;
+        			OledClearBuffer();
+
         		}
 
-        		if(buttonTwoPress()) {
-        			//state = btn3;
+        		else if(buttonTwoPress()) {
+        			// I2C selected
+        			I2C_Select = 1;
+        			// I2C helper functions go here
+        			state = playGame;
+        			OledClearBuffer();
+        		}
+
+        	}
+        	break;
+
+        	case playGame: {
+        		// If SPI was selected
+        		if(SPI_Select) {
+        			OledSetCursor(0,0);
+        			OledPutString("You got to SPI!");
+        			OledUpdate();
+        		}
+
+        		if(I2C_Select) {
+        			OledSetCursor(0,0);
+        			OledPutString("You got to I2C!");
+        			OledUpdate();
+
         		}
         	}
-        	break;            
         }
     }
 
