@@ -5,6 +5,7 @@ Function Implementations
 #include <plib.h>
 #include "Maze.h"
 
+uint32_t _lastPress;                // Used to keep track of the last button press for debouncing
 
 void DisplaySplashScreen() {
     // Print the splash screen before starting game
@@ -98,21 +99,21 @@ int SPIAccelRead(int address) {
 
 float SPIAccelGetCoor(int address) {
 	float result;
-	int data1, data2;
+    int data0, data1;
 
-	data1 = SPIAccelRead(address);
-	data2 = SPIAccelRead(address + 1);
+    data0 = SPIAccelRead(address);
+    data1 = SPIAccelRead(address + 1);
 
-	data2 = 0x0000FFFF & ( data1 | (data2 << 8) ); // Use data2 the upper 8 bits, data1 the lower 8 bits
+    data1 = 0x0000FFFF & ( data0 | (data1 << 8) ); // Concatenating the 2 registers values' together
 
-	if(data1 & 0x8000)              // Sign extension CHANGE ME
-		data1 = data1 | 0xFFFF0000;
+    if(data1 & 0x8000)              // Sign extension
+      data1 = data1 | 0xFFFF0000;
 
-	data1 = (data1 ^ 0xFFFFFFFF) + 1; // Converting to signed magnitude CHANGE ME
+    data1 = (data1 ^ 0xFFFFFFFF) + 1; // Converting to signed magnitude
 
-	result = (data1 / 256. * -1.);
+    result = (data1 * -100 / 256);
 
-	return result;
+    return result;
 }
 
 void SPIAccelWriteToReg(int address, int data) {

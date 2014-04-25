@@ -36,8 +36,20 @@ enum states { init, modeSelect, buttonIsPressed, playGame } state;
 /*****************************************
 Global Variables
 *****************************************/
-uint32_t sec1000;   // Millisecond timer counter
-uint32_t timer_a;   // Keeps tracks of timestamps
+uint32_t sec1000;   					   // Millisecond timer counter
+uint32_t timer_a;   					   // Keeps tracks of timestamps
+uint32_t SPI_Select;                // FLag for SPI selected
+uint32_t I2C_Select;                // Flag for I2C selected
+uint32_t Init_Display_Flag;         // Flag for Displaying the splash screen on init
+uint32_t row;
+uint32_t col;
+
+const uint32_t MAX_PLAYABLE_Y = 3;  // Maximum playable Y position
+const uint32_t MAX_PLAYABLE_X = 15; // Maximum playable X position
+
+const char PLAYER_ICON[] = { 0x00, 0x20, 0x40, 0xF0, 0xF0, 0x40, 0x20, 0x00 };
+const int player_icon = 0x00;
+
 
 /*****************************************
  Interrupt Handlers
@@ -49,9 +61,18 @@ void __ISR(_TIMER_2_VECTOR, ipl2) TimerInterruptHandler(void) {
     }
 }
 
+
+    int X, Y;
 void main() {
     DelayInit();
     OledInit();
+
+    TRISFCLR = BIT_12;
+
+    /*************************************
+    User-Defined Characters
+    *************************************/
+    OledDefUserChar(player_icon, PLAYER_ICON);
 
     DDPCONbits.JTAGEN = 0;		// Disable JTAG controller so BTN3 can be used as input
 
@@ -101,8 +122,7 @@ void main() {
         	// When that happens the mode select screen is only displayed for a brief window that doesn't
         	// allow the user enough time to make a choice
         	case buttonIsPressed: {
-        		int temp1 = buttonOnePress();
-                if(!temp1){
+                if(!buttonOnePress()) {
                    state = modeSelect;
                 }
         	}
@@ -114,7 +134,7 @@ void main() {
         			SPIAccelInit();
         			state = playGame;
         			OledClearBuffer();
-
+        			OledUpdate();
         		}
 
         		else if(buttonTwoPress()) {
@@ -122,6 +142,7 @@ void main() {
         			// I2C helper functions go here
         			state = playGame;
         			OledClearBuffer();
+        			OledUpdate();
         		}
 
         	}
@@ -130,14 +151,44 @@ void main() {
         	// setup case here that will print the maze and character
 
         	case playGame: {
+    			X = SPIAccelGetCoor(0x32);
+   				Y = SPIAccelGetCoor(0x34);
+
         		// If SPI was selected
         		if(SPI_Select) {
-        			OledSetCursor(0,0);
-        			OledPutString("You got to SPI!");
-        			OledUpdate();
+
+       				if( X < -25 && row < 3 ) {
+       					OledSetCursor(col, ++row);
+		                OledClearBuffer();
+		                OledPutChar(player_icon);
+		                OledUpdate();
+       				}
+
+       				else if ( X > 25 && row > 0 ) {
+       					OledSetCursor(col, --row);
+		                OledClearBuffer();
+		                OledPutChar(player_icon);
+		                OledUpdate();
+       				}
+
+       				if( Y < - 25 && col < 15 ) {
+       					OledSetCursor(++col, row);
+		                OledClearBuffer();
+		                OledPutChar(player_icon);
+		                OledUpdate();	
+       				}
+
+       				else if( Y > 25 && col > 0 ) {
+       					OledSetCursor(--col, row);
+		                OledClearBuffer();
+		                OledPutChar(player_icon);
+		                OledUpdate();
+       				}
+
+       				DelayMs(100);
         		}
 
-        		if(I2C_Select) {
+        		else if(I2C_Select) {
         			OledSetCursor(0,0);
         			OledPutString("You got to I2C!");
         			OledUpdate();
