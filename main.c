@@ -29,7 +29,10 @@
 #pragma config FPBDIV       = DIV_8	// Peripheral bus clock divider
 #pragma config FSOSCEN      = OFF	// Secondary   oscillator enable
 
- #define PERIPHERAL_CLOCK 10000000
+#define PERIPHERAL_CLOCK 10000000
+//#define FUNCTION_POINTER
+//#define ROW_BY_ROW
+
 
 enum states { init, modeSelect, buttonIsPressed, playGame } state;
 
@@ -50,6 +53,15 @@ const uint32_t MAX_PLAYABLE_X = 15; // Maximum playable X position
 const char PLAYER_ICON[] = { 0x00, 0x20, 0x40, 0xF0, 0xF0, 0x40, 0x20, 0x00 };
 const int player_icon = 0x00;
 
+struct _Player {
+	uint32_t upLeft;
+	uint32_t upRight;
+	uint32_t botLeft;
+	uint32_t botRight;
+};
+
+typedef struct _Player Player;
+
 
 /*****************************************
  Interrupt Handlers
@@ -66,6 +78,18 @@ void __ISR(_TIMER_2_VECTOR, ipl2) TimerInterruptHandler(void) {
 void main() {
     DelayInit();
     OledInit();
+
+#ifdef FUNCTION_POINTER 	// function pointer stuff
+    int (*checkPos)(void);
+
+
+    checkPos = CheckLeft;
+    checkPos(); // CheckLeft();
+
+    checkPos = CheckRight;
+  	checkPos(); // CheckRight();
+#endif
+
 
     TRISFCLR = BIT_12;
 
@@ -157,6 +181,7 @@ void main() {
         		// If SPI was selected
         		if(SPI_Select) {
 
+#ifdef ROW_BY_ROW // Row by row and column by column
        				if( X < -25 && row < 3 ) {
        					OledSetCursor(col, ++row);
 		                OledClearBuffer();
@@ -186,6 +211,7 @@ void main() {
        				}
 
        				DelayMs(100);
+#endif
         		}
 
         		else if(I2C_Select) {

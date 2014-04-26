@@ -31,6 +31,10 @@ void DisplayModeSelect() {
 	OledUpdate();
 }
 
+/**********************************************
+Button Debouncing Functions
+**********************************************/
+
 int buttonOnePress() {
     int cur = PORTG & 0x40;
     if (cur == _lastPress) return 0;
@@ -64,6 +68,15 @@ int buttonThreePress() {
     return 0;
 }
 
+/**********************************************
+Collision Detection Functions
+**********************************************/
+
+// Function checks if the pixel behind 
+int CheckLeft( uint32_t* leftPos) {
+    return OledGetPixel( (*leftPos) - 1 );     // Check the position behind the player's current position
+}
+
 
 /**********************************************
 SPI Helper Function Implementations
@@ -73,15 +86,18 @@ SPI Helper Function Implementations
 void SPIAccelInit() {
 	int garbage;
 
-   SpiChnOpen(SPI_CHANNEL4, SPI_OPEN_MSTEN |
-           	  SPI_OPEN_CKP_HIGH | SPI_OPEN_ENHBUF, 2);
+    SpiChnOpen(SPI_CHANNEL4, 
+               SPI_OPEN_MSTEN       |
+           	   SPI_OPEN_CKP_HIGH    | 
+               SPI_OPEN_ENHBUF, 
+               2);
 
-   SpiChnPutC(SPI_CHANNEL4, 0x80);
+    SpiChnPutC(SPI_CHANNEL4, 0x80);
 
-   garbage = SpiChnGetC(SPI_CHANNEL4);
+    garbage = SpiChnGetC(SPI_CHANNEL4);
 
-   SPIAccelWriteToReg(0x2C, 0x0A);
-   SPIAccelWriteToReg(0x2D, 0x08);
+    SPIAccelWriteToReg(0x2C, 0x0A);
+    SPIAccelWriteToReg(0x2D, 0x08);
 }
 
 
@@ -104,12 +120,12 @@ float SPIAccelGetCoor(int address) {
     data0 = SPIAccelRead(address);
     data1 = SPIAccelRead(address + 1);
 
-    data1 = 0x0000FFFF & ( data0 | (data1 << 8) ); // Concatenating the 2 registers values' together
+    data1 = 0x0000FFFF & ( data0 | (data1 << 8) ); // Use data2 the upper 8 bits, data1 the lower 8 bits
 
-    if(data1 & 0x8000)              // Sign extension
+    if(data1 & 0x8000)              // Sign extension CHANGE ME
       data1 = data1 | 0xFFFF0000;
 
-    data1 = (data1 ^ 0xFFFFFFFF) + 1; // Converting to signed magnitude
+    data1 = (data1 ^ 0xFFFFFFFF) + 1; // Converting to signed magnitude CHANGE ME
 
     result = (data1 * -100 / 256);
 
