@@ -195,14 +195,14 @@ void main() {
         		if(SPI_Select) {
                     //PrintPlayer( thePlayer.x_position, thePlayer.y_position );
                     OledClearBuffer();
-                    PrintMaze();
+                    //PrintMaze();
 
                     // Controls the movement of the y-axis
                     if( Y < -25) {
                         OledMoveTo( thePlayer.x_position, thePlayer.y_position+2 );
                         if( !OledGetPixel() ) {
                             thePlayer.y_position++;
-                            PrintPlayer( thePlayer.x_position, thePlayer.y_position );
+                            //PrintPlayer( thePlayer.x_position, thePlayer.y_position );
                         }
 
                         else {
@@ -216,7 +216,7 @@ void main() {
                         OledMoveTo( thePlayer.x_position, thePlayer.y_position-1 );
                         if( !OledGetPixel() ) {
                             thePlayer.y_position--;
-                            PrintPlayer( thePlayer.x_position, thePlayer.y_position );
+                            //PrintPlayer( thePlayer.x_position, thePlayer.y_position );
                             //OledUpdate();
                         }
 
@@ -237,7 +237,7 @@ void main() {
                         OledMoveTo( thePlayer.x_position+2, thePlayer.y_position );
                         if( !OledGetPixel() ) {
                             thePlayer.x_position++;
-                            PrintPlayer( thePlayer.x_position, thePlayer.y_position );
+                            //PrintPlayer( thePlayer.x_position, thePlayer.y_position );
                         }
 
                         else {
@@ -249,7 +249,7 @@ void main() {
                         OledMoveTo( thePlayer.x_position-1, thePlayer.y_position );
                         if( !OledGetPixel() ) {
                             thePlayer.x_position--;
-                            PrintPlayer( thePlayer.x_position, thePlayer.y_position );
+                            //PrintPlayer( thePlayer.x_position, thePlayer.y_position );
                             //OledUpdate();
                         }
 
@@ -261,10 +261,11 @@ void main() {
                     }
 
                     else {
-                        PrintPlayer( thePlayer.x_position, thePlayer.y_position );
+                        //PrintPlayer( thePlayer.x_position, thePlayer.y_position );
                         //OledUpdate();
                     }
 
+                    PrintPlayer( thePlayer.x_position, thePlayer.y_position );
                     OledUpdate();
 
 #ifdef ROW_BY_ROW // Row by row and column by column
