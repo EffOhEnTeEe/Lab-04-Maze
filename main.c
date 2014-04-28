@@ -30,10 +30,12 @@
 #pragma config FSOSCEN      = OFF	// Secondary   oscillator enable
 
 #define PERIPHERAL_CLOCK 10000000
+#define SENSITIVITY 10              // Controls how sensitive the accelerometer comparisons are for player movement
 //#define FUNCTION_POINTER
 //#define ROW_BY_ROW
 //#define PRINT_MAZE
 
+// I probably don't need setup
 enum states { init, modeSelect, buttonIsPressed, setup, playGame } state;
 
 // This struct will hold the the position variables
@@ -53,17 +55,17 @@ Global Variables
 *****************************************/
 uint32_t sec1000;   					   // Millisecond timer counter
 uint32_t timer_a;   					   // Keeps tracks of timestamps
-uint32_t SPI_Select;                // FLag for SPI selected
-uint32_t I2C_Select;                // Flag for I2C selected
-uint32_t Init_Display_Flag;         // Flag for Displaying the splash screen on init
+uint32_t SPI_Select;                       // FLag for SPI selected
+uint32_t I2C_Select;                       // Flag for I2C selected
+uint32_t Init_Display_Flag;                // Flag for Displaying the splash screen on init
+//row and col are probably unnecessary
 uint32_t row;
 uint32_t col;
+uint32_t Position_Change;                  // Flag to know if the player position has changed
 
-const uint32_t MAX_PLAYABLE_ROW = 3;  // Maximum playable Y position
-const uint32_t MAX_PLAYABLE_COL = 15; // Maximum playable X position
-
-const char PLAYER_ICON[] = { 0x03, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
-const int player_icon = 0x00;
+// These are probably unnecessary
+const uint32_t MAX_PLAYABLE_ROW = 3;       // Maximum playable Y position
+const uint32_t MAX_PLAYABLE_COL = 15;      // Maximum playable X position
 
 Player thePlayer;
 
@@ -93,13 +95,7 @@ void main() {
   	checkPos(); // CheckRight();
 #endif
 
-
     TRISFCLR = BIT_12;
-
-    /*************************************
-    User-Defined Characters
-    *************************************/
-    OledDefUserChar(player_icon, PLAYER_ICON);
 
     DDPCONbits.JTAGEN = 0;		// Disable JTAG controller so BTN3 can be used as input
 
@@ -193,80 +189,55 @@ void main() {
 
         		// If SPI was selected
         		if(SPI_Select) {
-                    //PrintPlayer( thePlayer.x_position, thePlayer.y_position );
-                    OledClearBuffer();
-                    //PrintMaze();
 
-                    // Controls the movement of the y-axis
-                    if( Y < -25) {
+                    /**********************************************
+                    Controls the movement of the y-axis
+                    **********************************************/
+                    if( Y < -SENSITIVITY ) {
                         OledMoveTo( thePlayer.x_position, thePlayer.y_position+2 );
                         if( !OledGetPixel() ) {
                             thePlayer.y_position++;
-                            //PrintPlayer( thePlayer.x_position, thePlayer.y_position );
+                            Position_Change = 1;
                         }
-
-                        else {
-                            //PrintPlayer( thePlayer.x_position, thePlayer.y_position );
-                        }
-
-                        //OledUpdate();
                     }
 
-                    else if( Y > 25 ) {
+                    else if( Y > SENSITIVITY ) {
                         OledMoveTo( thePlayer.x_position, thePlayer.y_position-1 );
                         if( !OledGetPixel() ) {
                             thePlayer.y_position--;
-                            //PrintPlayer( thePlayer.x_position, thePlayer.y_position );
-                            //OledUpdate();
+                            Position_Change = 1;
                         }
-
-                        else {
-                            //PrintPlayer( thePlayer.x_position, thePlayer.y_position );   
-                        }
-
-                        //OledUpdate();
                     }
-
-                    else {
-                        //PrintPlayer( thePlayer.x_position, thePlayer.y_position );
-                        //OledUpdate();
-                    }
-
-                    // Controls the movement of the x-axis
-                    if( X < -25 ) {
+                    
+                    /**********************************************
+                    Controls the movement of the x-axis
+                    **********************************************/
+                    if( X < -SENSITIVITY ) {
                         OledMoveTo( thePlayer.x_position+2, thePlayer.y_position );
                         if( !OledGetPixel() ) {
                             thePlayer.x_position++;
-                            //PrintPlayer( thePlayer.x_position, thePlayer.y_position );
-                        }
-
-                        else {
-                            //PrintPlayer( thePlayer.x_position, thePlayer.y_position );
+                            Position_Change = 1;
                         }
                     }
 
-                    else if( X > 25 ) {
+                    else if( X > SENSITIVITY ) {
                         OledMoveTo( thePlayer.x_position-1, thePlayer.y_position );
                         if( !OledGetPixel() ) {
                             thePlayer.x_position--;
-                            //PrintPlayer( thePlayer.x_position, thePlayer.y_position );
-                            //OledUpdate();
+                            Position_Change = 1;
                         }
-
-                        else {
-                            //PrintPlayer( thePlayer.x_position, thePlayer.y_position );   
-                        }
-
-                        //OledUpdate();
                     }
 
-                    else {
-                        //PrintPlayer( thePlayer.x_position, thePlayer.y_position );
-                        //OledUpdate();
-                    }
-
-                    PrintPlayer( thePlayer.x_position, thePlayer.y_position );
-                    OledUpdate();
+                    // If the position has changed then update the player's position and print to OLED
+//                    if( Position_Change ) {       // For some reason, enabling this causes random movement of player
+                                                    // but this doesn't seem to flicker. If this solution works then
+                                                    // I can delete the Position_Change flag
+                        //Position_Change = 0;
+                        OledClearBuffer();
+                        PrintPlayer( thePlayer.x_position, thePlayer.y_position );
+                        PrintMaze();
+                        OledUpdate();
+//                    }
 
 #ifdef ROW_BY_ROW // Row by row and column by column
        				if( X < -25 && row < 3 ) {
