@@ -11,11 +11,13 @@
 #include <stdint.h>
 #include "OledGrph.h"
 
-void DisplaySplashScreen();		// Display the splash screen with my initials, "Cerebot," and "Maze puzzle" on three lines
-void DisplayModeSelect();		// Display the mode select screen allowing selection of SPI or I2C communication
-int buttonOnePress();			// BTN1 debouncing
-int buttonTwoPress();			// BTN2 debouncing
-int buttonThreePress();			// BTN3 debouncing
+void DisplaySplashScreen();					// Display the splash screen with my initials, "Cerebot," and "Maze puzzle" on three lines
+void DisplayModeSelect();					// Display the mode select screen allowing selection of SPI or I2C communication
+int buttonOnePress();						// BTN1 debouncing
+int buttonTwoPress();						// BTN2 debouncing
+int buttonThreePress();						// BTN3 debouncing
+void PrintMaze();							// Prints the maze to the OLED
+void PrintPlayer( uint32_t*, uint32_t* );	// Displays the player on the OLED
 // not implemented, might not be the best solution
 int CheckLeft( uint32_t* );					// Check pixel left of the player
 int CheckRight( uint32_t* );				// Check pixel right of the player

@@ -32,9 +32,21 @@
 #define PERIPHERAL_CLOCK 10000000
 //#define FUNCTION_POINTER
 //#define ROW_BY_ROW
+//#define PRINT_MAZE
 
+enum states { init, modeSelect, buttonIsPressed, setup, playGame } state;
 
-enum states { init, modeSelect, buttonIsPressed, playGame } state;
+// This struct will hold the the position variables
+// for the player icon
+struct _Player {
+	uint32_t upLeft;// = 128;
+	uint32_t upRight;// = 129;
+	uint32_t botLeft;// = 256;
+	uint32_t botRight;// = 257;
+    uint32_t x_position;
+    uint32_t y_position;
+};
+typedef struct _Player Player;
 
 /*****************************************
 Global Variables
@@ -47,21 +59,13 @@ uint32_t Init_Display_Flag;         // Flag for Displaying the splash screen on 
 uint32_t row;
 uint32_t col;
 
-const uint32_t MAX_PLAYABLE_Y = 3;  // Maximum playable Y position
-const uint32_t MAX_PLAYABLE_X = 15; // Maximum playable X position
+const uint32_t MAX_PLAYABLE_ROW = 3;  // Maximum playable Y position
+const uint32_t MAX_PLAYABLE_COL = 15; // Maximum playable X position
 
-const char PLAYER_ICON[] = { 0x00, 0x20, 0x40, 0xF0, 0xF0, 0x40, 0x20, 0x00 };
+const char PLAYER_ICON[] = { 0x03, 0x03, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00 };
 const int player_icon = 0x00;
 
-struct _Player {
-	uint32_t upLeft;
-	uint32_t upRight;
-	uint32_t botLeft;
-	uint32_t botRight;
-};
-
-typedef struct _Player Player;
-
+Player thePlayer;
 
 /*****************************************
  Interrupt Handlers
@@ -73,11 +77,12 @@ void __ISR(_TIMER_2_VECTOR, ipl2) TimerInterruptHandler(void) {
     }
 }
 
-
-    int X, Y;
 void main() {
     DelayInit();
     OledInit();
+	int X, Y;
+    thePlayer.x_position = 2;
+    thePlayer.y_position = 2;
 
 #ifdef FUNCTION_POINTER 	// function pointer stuff
     int (*checkPos)(void);
@@ -156,7 +161,7 @@ void main() {
         		if(buttonOnePress()) {
         			SPI_Select = 1;			// SPI selected
         			SPIAccelInit();
-        			state = playGame;
+        			state = setup;
         			OledClearBuffer();
         			OledUpdate();
         		}
@@ -164,7 +169,7 @@ void main() {
         		else if(buttonTwoPress()) {
         			I2C_Select = 1;			// I2C selected
         			// I2C helper functions go here
-        			state = playGame;
+        			state = setup;
         			OledClearBuffer();
         			OledUpdate();
         		}
@@ -173,6 +178,13 @@ void main() {
         	break;
 
         	// setup case here that will print the maze and character
+        	case setup: {
+#ifdef PRINT_MAZE
+        		OledClearBuffer();
+        		PrintMaze();	// Print the maze to the OLED
+#endif
+        		state = playGame;
+        	}
 
         	case playGame: {
     			X = SPIAccelGetCoor(0x32);
@@ -180,6 +192,10 @@ void main() {
 
         		// If SPI was selected
         		if(SPI_Select) {
+                    PrintPlayer( &thePlayer.x_position, &thePlayer.y_position );
+                    PrintMaze();
+                    OledUpdate();
+                    OledClearBuffer();
 
 #ifdef ROW_BY_ROW // Row by row and column by column
        				if( X < -25 && row < 3 ) {

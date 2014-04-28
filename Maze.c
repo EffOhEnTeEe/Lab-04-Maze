@@ -3,6 +3,7 @@ Function Implementations
 ************************************************/
 
 #include <plib.h>
+//#include "OledGrph.h"
 #include "Maze.h"
 
 uint32_t _lastPress;                // Used to keep track of the last button press for debouncing
@@ -66,6 +67,59 @@ int buttonThreePress() {
     _lastPress = cur;
     if (cur) return 1;
     return 0;
+}
+
+/**********************************************
+Maze Printing
+**********************************************/
+
+void PrintMaze() {
+    //OledClearBuffer();
+    const int grid[]={27,30,44,47,70,73,107,110,127,
+                      50,53,79,82,90,93,127,
+                      20,23,67,70,106,109,127};
+    OledMoveTo(0,0);OledDrawRect(127,31);
+    uint32_t xc = 0;
+    uint32_t yc = 7;
+    uint32_t ind = 0;
+    OledMoveTo(xc,yc);
+    while(1) {
+    OledLineTo(grid[ind],yc);
+    if (grid[ind++]==127) {
+    yc+=8;
+    OledMoveTo(0,yc);
+    if(yc>30) break; //we're done
+    }
+    else OledMoveTo(grid[ind++],yc);
+    }
+    OledMoveTo(64,0);
+    OledLineTo(64,23);
+    OledMoveTo(40,7);
+    OledLineTo(40,15);
+    OledMoveTo(85,7);
+    OledLineTo(85,23);
+    OledMoveTo(96,23);
+    OledLineTo(96,31);
+    OledUpdate();
+}
+
+/**********************************************
+Collision Detection Functions
+**********************************************/
+
+//Print the player character to the OLED without updating the display
+void PrintPlayer( uint32_t* x_coor, uint32_t* y_coor ) {
+    uint32_t xco = *x_coor;
+    uint32_t yco = *y_coor;
+
+    OledMoveTo( xco, yco );
+    OledDrawPixel();
+    OledMoveTo( xco+1, yco );
+    OledDrawPixel();
+    OledMoveTo( xco, yco+1 );
+    OledDrawPixel();
+    OledMoveTo( xco+1, yco+1 );
+    OledDrawPixel();
 }
 
 /**********************************************
