@@ -81,8 +81,6 @@ void main() {
     DelayInit();
     OledInit();
 	int X, Y;
-    thePlayer.x_position = 2;
-    thePlayer.y_position = 2;
 
 #ifdef FUNCTION_POINTER 	// function pointer stuff
     int (*checkPos)(void);
@@ -135,6 +133,9 @@ void main() {
 	        		
 	        		SPI_Select = 0;				// Reset flags for SPI and I2C select
 	        		I2C_Select = 0;
+
+                    thePlayer.x_position = 2;   // Reset player's starting x_position
+                    thePlayer.y_position = 2;   // Reset player's starting y_position
         		}
 
         		// Stay in the init stage until BTN1 is pressed then display the mode select screen
@@ -192,10 +193,11 @@ void main() {
 
         		// If SPI was selected
         		if(SPI_Select) {
-                    PrintPlayer( thePlayer.x_position, thePlayer.y_position );
+                    //PrintPlayer( thePlayer.x_position, thePlayer.y_position );
                     OledClearBuffer();
                     PrintMaze();
 
+                    // Controls the movement of the y-axis
                     if( Y < -25) {
                         OledMoveTo( thePlayer.x_position, thePlayer.y_position+2 );
                         if( !OledGetPixel() ) {
@@ -204,7 +206,7 @@ void main() {
                         }
 
                         else {
-                            PrintPlayer( thePlayer.x_position, thePlayer.y_position );
+                            //PrintPlayer( thePlayer.x_position, thePlayer.y_position );
                         }
 
                         //OledUpdate();
@@ -219,7 +221,40 @@ void main() {
                         }
 
                         else {
-                            PrintPlayer( thePlayer.x_position, thePlayer.y_position );   
+                            //PrintPlayer( thePlayer.x_position, thePlayer.y_position );   
+                        }
+
+                        //OledUpdate();
+                    }
+
+                    else {
+                        //PrintPlayer( thePlayer.x_position, thePlayer.y_position );
+                        //OledUpdate();
+                    }
+
+                    // Controls the movement of the x-axis
+                    if( X < -25 ) {
+                        OledMoveTo( thePlayer.x_position+2, thePlayer.y_position );
+                        if( !OledGetPixel() ) {
+                            thePlayer.x_position++;
+                            PrintPlayer( thePlayer.x_position, thePlayer.y_position );
+                        }
+
+                        else {
+                            //PrintPlayer( thePlayer.x_position, thePlayer.y_position );
+                        }
+                    }
+
+                    else if( X > 25 ) {
+                        OledMoveTo( thePlayer.x_position-1, thePlayer.y_position );
+                        if( !OledGetPixel() ) {
+                            thePlayer.x_position--;
+                            PrintPlayer( thePlayer.x_position, thePlayer.y_position );
+                            //OledUpdate();
+                        }
+
+                        else {
+                            //PrintPlayer( thePlayer.x_position, thePlayer.y_position );   
                         }
 
                         //OledUpdate();
