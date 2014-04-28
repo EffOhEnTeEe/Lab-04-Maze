@@ -108,10 +108,7 @@ Collision Detection Functions
 **********************************************/
 
 //Print the player character to the OLED without updating the display
-void PrintPlayer( uint32_t* x_coor, uint32_t* y_coor ) {
-    uint32_t xco = *x_coor;
-    uint32_t yco = *y_coor;
-
+void PrintPlayer( uint32_t xco, uint32_t yco ) {
     OledMoveTo( xco, yco );
     OledDrawPixel();
     OledMoveTo( xco+1, yco );

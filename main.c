@@ -187,15 +187,50 @@ void main() {
         	}
 
         	case playGame: {
-    			X = SPIAccelGetCoor(0x32);
-   				Y = SPIAccelGetCoor(0x34);
+    			Y = SPIAccelGetCoor(0x32);
+   				X = SPIAccelGetCoor(0x34);
 
         		// If SPI was selected
         		if(SPI_Select) {
-                    PrintPlayer( &thePlayer.x_position, &thePlayer.y_position );
-                    PrintMaze();
-                    OledUpdate();
+                    PrintPlayer( thePlayer.x_position, thePlayer.y_position );
                     OledClearBuffer();
+                    PrintMaze();
+
+                    if( Y < -25) {
+                        OledMoveTo( thePlayer.x_position, thePlayer.y_position+2 );
+                        if( !OledGetPixel() ) {
+                            thePlayer.y_position++;
+                            PrintPlayer( thePlayer.x_position, thePlayer.y_position );
+                        }
+
+                        else {
+                            PrintPlayer( thePlayer.x_position, thePlayer.y_position );
+                        }
+
+                        //OledUpdate();
+                    }
+
+                    else if( Y > 25 ) {
+                        OledMoveTo( thePlayer.x_position, thePlayer.y_position-1 );
+                        if( !OledGetPixel() ) {
+                            thePlayer.y_position--;
+                            PrintPlayer( thePlayer.x_position, thePlayer.y_position );
+                            //OledUpdate();
+                        }
+
+                        else {
+                            PrintPlayer( thePlayer.x_position, thePlayer.y_position );   
+                        }
+
+                        //OledUpdate();
+                    }
+
+                    else {
+                        PrintPlayer( thePlayer.x_position, thePlayer.y_position );
+                        //OledUpdate();
+                    }
+
+                    OledUpdate();
 
 #ifdef ROW_BY_ROW // Row by row and column by column
        				if( X < -25 && row < 3 ) {
