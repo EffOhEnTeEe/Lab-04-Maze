@@ -10,6 +10,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <plib.h>
+#include <math.h>
 #include "delay.h"
 #include "OledChar.h"
 #include "OledGrph.h"
@@ -30,6 +31,7 @@
 
 #define PERIPHERAL_CLOCK 10000000
 #define SENSITIVITY 10              // Controls how sensitive the accelerometer comparisons are for player movement
+#define MAX_VELOCITY 50             // Sets max velocity to 50 pixels per second
 //#define FUNCTION_POINTER
 //#define ROW_BY_ROW
 //#define PRINT_MAZE
@@ -50,6 +52,7 @@ struct _Player {
 
     int x_velocity;
     int y_velocity;
+    int xy_velocity;
 };
 typedef struct _Player Player;
 
@@ -65,6 +68,7 @@ uint32_t Init_Display_Flag;                // Flag for Displaying the splash scr
 uint32_t row;
 uint32_t col;
 uint32_t Position_Change;                  // Flag to know if the player position has changed
+uint32_t velocity_timer;                   // Timer based on calculated velocity
 
 // These are probably unnecessary
 const uint32_t MAX_PLAYABLE_ROW = 3;       // Maximum playable Y position
@@ -138,6 +142,8 @@ void main() {
 
                     thePlayer.x_velocity = 0;
                     thePlayer.y_velocity = 0;
+
+                    thePlayer.xy_velocity = 0;
         		}
 
         		// Stay in the init stage until BTN1 is pressed then display the mode select screen
@@ -205,6 +211,25 @@ void main() {
                     thePlayer.y_velocity = GetVelocity(thePlayer.y_velocity, Y);
                     sprintf(buf, "%6d", thePlayer.y_velocity);
                     OledPutString(buf);
+
+                    thePlayer.xy_velocity = sqrt(thePlayer.x_velocity * thePlayer.x_velocity +
+                                                 thePlayer.y_velocity * thePlayer.y_velocity);
+
+                    if(thePlayer.xy_velocity) {
+                        velocity_timer = 1. / thePlayer.xy_velocity * 1000;
+                    }
+
+                    if(thePlayer.xy_velocity > 50) {
+                        thePlayer.xy_velocity = 50;
+                    }
+
+                    OledSetCursor(0,0);
+                    sprintf (buf, "%6d", velocity_timer);
+                    OledPutString(buf);
+
+                    DelayMs(200);
+
+                    //0x30 & 0x80 for new data
 
 #ifdef X_Y_MOVE                    
                     /**********************************************
