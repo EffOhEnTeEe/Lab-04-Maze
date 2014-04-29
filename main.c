@@ -9,7 +9,6 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <stdint.h>
-#include <time.h>
 #include <plib.h>
 #include "delay.h"
 #include "OledChar.h"
@@ -34,6 +33,7 @@
 //#define FUNCTION_POINTER
 //#define ROW_BY_ROW
 //#define PRINT_MAZE
+//#define X_Y_MOVE
 
 // I probably don't need setup
 enum states { init, modeSelect, buttonIsPressed, setup, playGame } state;
@@ -47,6 +47,9 @@ struct _Player {
 	uint32_t botRight;// = 257;
     uint32_t x_position;
     uint32_t y_position;
+
+    int x_velocity;
+    int y_velocity;
 };
 typedef struct _Player Player;
 
@@ -132,6 +135,9 @@ void main() {
 
                     thePlayer.x_position = 2;   // Reset player's starting x_position
                     thePlayer.y_position = 2;   // Reset player's starting y_position
+
+                    thePlayer.x_velocity = 0;
+                    thePlayer.y_velocity = 0;
         		}
 
         		// Stay in the init stage until BTN1 is pressed then display the mode select screen
@@ -189,26 +195,18 @@ void main() {
 
         		// If SPI was selected
         		if(SPI_Select) {
+                    char buf[50];
+                    OledSetCursor(6,0);
+                    thePlayer.x_velocity = GetVelocity(thePlayer.x_velocity, X);
+                    sprintf(buf, "%6d", thePlayer.x_velocity);
+                    OledPutString(buf);
 
-                    /**********************************************
-                    Controls the movement of the y-axis
-                    **********************************************/
-                    if( Y < -SENSITIVITY ) {
-                        OledMoveTo( thePlayer.x_position, thePlayer.y_position+2 );
-                        if( !OledGetPixel() ) {
-                            thePlayer.y_position++;
-                            Position_Change = 1;
-                        }
-                    }
+                    OledSetCursor(6,1);
+                    thePlayer.y_velocity = GetVelocity(thePlayer.y_velocity, Y);
+                    sprintf(buf, "%6d", thePlayer.y_velocity);
+                    OledPutString(buf);
 
-                    else if( Y > SENSITIVITY ) {
-                        OledMoveTo( thePlayer.x_position, thePlayer.y_position-1 );
-                        if( !OledGetPixel() ) {
-                            thePlayer.y_position--;
-                            Position_Change = 1;
-                        }
-                    }
-                    
+#ifdef X_Y_MOVE                    
                     /**********************************************
                     Controls the movement of the x-axis
                     **********************************************/
@@ -228,6 +226,25 @@ void main() {
                         }
                     }
 
+                    /**********************************************
+                    Controls the movement of the y-axis
+                    **********************************************/
+                    if( Y < -SENSITIVITY ) {
+                        OledMoveTo( thePlayer.x_position, thePlayer.y_position+2 );
+                        if( !OledGetPixel() ) {
+                            thePlayer.y_position++;
+                            Position_Change = 1;
+                        }
+                    }
+
+                    else if( Y > SENSITIVITY ) {
+                        OledMoveTo( thePlayer.x_position, thePlayer.y_position-1 );
+                        if( !OledGetPixel() ) {
+                            thePlayer.y_position--;
+                            Position_Change = 1;
+                        }
+                    }
+
                     // If the position has changed then update the player's position and print to OLED
 //                    if( Position_Change ) {       // For some reason, enabling this causes random movement of player
                                                     // but this doesn't seem to flicker. If this solution works then
@@ -238,6 +255,7 @@ void main() {
                         PrintMaze();
                         OledUpdate();
 //                    }
+#endif
 
 #ifdef ROW_BY_ROW // Row by row and column by column
        				if( X < -25 && row < 3 ) {

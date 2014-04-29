@@ -119,6 +119,17 @@ void PrintPlayer( uint32_t xco, uint32_t yco ) {
     OledDrawPixel();
 }
 
+int sng( int prevVelo ) {
+    if(prevVelo < 0) return -1;
+    else if(prevVelo > 0) return 1;
+    else return 0;
+    //return prevVelo < 0 ? -1:1;
+}
+ 
+int GetVelocity(int prevVelo, int accel) {
+    prevVelo = prevVelo + accel * 5764  / 25600 - sng( prevVelo ) * 5;
+}
+
 /**********************************************
 Collision Detection Functions
 **********************************************/
@@ -164,23 +175,23 @@ int SPIAccelRead(int address) {
 	return reading;
 }
 
-float SPIAccelGetCoor(int address) {
-	float result;
-    int data0, data1;
+int SPIAccelGetCoor(int address) {
+    int data0, data1, result;
 
     data0 = SPIAccelRead(address);
     data1 = SPIAccelRead(address + 1);
 
-    data1 = 0x0000FFFF & ( data0 | (data1 << 8) ); // Use data2 the upper 8 bits, data1 the lower 8 bits
+    data1 = 0x0000FFFF & ( data0 | (data1 << 8) );  // Use data2 the upper 8 bits, data1 the lower 8 bits
+                                                    // and ensure upper bits are 0
 
     if(data1 & 0x8000)              // Sign extension CHANGE ME
       data1 = data1 | 0xFFFF0000;
 
-    data1 = (data1 ^ 0xFFFFFFFF) + 1; // Converting to signed magnitude CHANGE ME
+    //data1 = (data1 ^ 0xFFFFFFFF) + 1; // Converting to signed magnitude CHANGE ME
 
-    result = (data1 * -100 / 256);
+    result = data1 * -100 / 256;
 
-    return result;
+    return data1;
 }
 
 void SPIAccelWriteToReg(int address, int data) {

@@ -17,7 +17,9 @@ int buttonOnePress();						// BTN1 debouncing
 int buttonTwoPress();						// BTN2 debouncing
 int buttonThreePress();						// BTN3 debouncing
 void PrintMaze();							// Prints the maze to the OLED
-void PrintPlayer( uint32_t, uint32_t );	// Displays the player on the OLED
+void PrintPlayer( uint32_t, uint32_t );		// Displays the player on the OLED
+int sng( int );								// Returns the sign of the velocity value
+int GetVelocity( int, int );				// Returns the new velocity value 
 // not implemented, might not be the best solution
 int CheckLeft( uint32_t* );					// Check pixel left of the player
 int CheckRight( uint32_t* );				// Check pixel right of the player
@@ -29,7 +31,7 @@ SPI Helper Function Prototypes
 *************************************/
 void SPIAccelInit();
 int SPIAccelRead(int address);
-float SPIAccelGetCoor(int address);
+int SPIAccelGetCoor(int address);
 void SPIAccelWriteToReg(int address, int data);
 
 
