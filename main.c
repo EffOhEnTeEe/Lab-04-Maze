@@ -31,11 +31,12 @@
 
 #define PERIPHERAL_CLOCK 10000000
 #define SENSITIVITY 10              // Controls how sensitive the accelerometer comparisons are for player movement
-#define MAX_VELOCITY 50             // Sets max velocity to 50 pixels per second
+#define MAX_VELOCITY 55             // Sets max velocity to 50 pixels per second
 //#define FUNCTION_POINTER
 //#define ROW_BY_ROW
 //#define PRINT_MAZE
-//#define X_Y_MOVE
+#define X_Y_MOVE
+//#define VELOCITY_PRINT
 
 // I probably don't need setup
 enum states { init, modeSelect, buttonIsPressed, setup, playGame } state;
@@ -201,6 +202,7 @@ void main() {
 
         		// If SPI was selected
         		if(SPI_Select) {
+#ifdef VELOCITY_PRINT
                     char buf[50];
                     OledSetCursor(6,0);
                     thePlayer.x_velocity = GetVelocity(thePlayer.x_velocity, X);
@@ -216,6 +218,7 @@ void main() {
                                                  thePlayer.y_velocity * thePlayer.y_velocity);
 
                     if(thePlayer.xy_velocity) {
+                        //velocity_timer = sec1000 + 1. / thePlayer.xy_velocity * 1000;
                         velocity_timer = 1. / thePlayer.xy_velocity * 1000;
                     }
 
@@ -227,15 +230,29 @@ void main() {
                     sprintf (buf, "%6d", velocity_timer);
                     OledPutString(buf);
 
-                    DelayMs(200);
+                    //DelayMs(200);
+#endif
 
                     //0x30 & 0x80 for new data
 
-#ifdef X_Y_MOVE                    
+#ifdef X_Y_MOVE      
+                    thePlayer.x_velocity = GetVelocity(thePlayer.x_velocity, X);
+                    thePlayer.y_velocity = GetVelocity(thePlayer.y_velocity, Y);
+
+                    thePlayer.xy_velocity = sqrt(thePlayer.x_velocity * thePlayer.x_velocity +
+                                                 thePlayer.y_velocity * thePlayer.y_velocity);
+
+                    
+                    if( sec1000 > velocity_timer ) {
+
+                        if(thePlayer.xy_velocity) {
+                            velocity_timer = sec1000 + 1. / thePlayer.xy_velocity * 1000;
+                            //velocity_timer = 1. / thePlayer.xy_velocity * 1000;
+                        }              
                     /**********************************************
                     Controls the movement of the x-axis
                     **********************************************/
-                    if( X < -SENSITIVITY ) {
+                    if( thePlayer.x_velocity < -5 ) {
                         OledMoveTo( thePlayer.x_position+2, thePlayer.y_position );
                         if( !OledGetPixel() ) {
                             thePlayer.x_position++;
@@ -243,7 +260,7 @@ void main() {
                         }
                     }
 
-                    else if( X > SENSITIVITY ) {
+                    else if( thePlayer.x_velocity > 5 ) {
                         OledMoveTo( thePlayer.x_position-1, thePlayer.y_position );
                         if( !OledGetPixel() ) {
                             thePlayer.x_position--;
@@ -254,7 +271,7 @@ void main() {
                     /**********************************************
                     Controls the movement of the y-axis
                     **********************************************/
-                    if( Y < -SENSITIVITY ) {
+                    if( thePlayer.y_velocity < -5 ) {
                         OledMoveTo( thePlayer.x_position, thePlayer.y_position+2 );
                         if( !OledGetPixel() ) {
                             thePlayer.y_position++;
@@ -262,7 +279,7 @@ void main() {
                         }
                     }
 
-                    else if( Y > SENSITIVITY ) {
+                    else if( thePlayer.y_velocity > 5 ) {
                         OledMoveTo( thePlayer.x_position, thePlayer.y_position-1 );
                         if( !OledGetPixel() ) {
                             thePlayer.y_position--;
@@ -280,6 +297,7 @@ void main() {
                         PrintMaze();
                         OledUpdate();
 //                    }
+                    }
 #endif
 
 #ifdef ROW_BY_ROW // Row by row and column by column

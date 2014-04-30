@@ -127,7 +127,10 @@ int sng( int prevVelo ) {
 }
  
 int GetVelocity(int prevVelo, int accel) {
-    prevVelo = prevVelo + accel * 5764  / 25600 - sng( prevVelo ) * 5;
+    prevVelo = (prevVelo + accel * 5764  / 25600 - sng( prevVelo ) * 10);
+    if(prevVelo > 0) return prevVelo - 5;
+    else if(prevVelo < 0) return prevVelo + 5;
+    else return prevVelo;
 }
 
 /**********************************************
@@ -191,7 +194,12 @@ int SPIAccelGetCoor(int address) {
 
     result = data1 * -100 / 256;
 
-    return data1;
+    if( -3 < data1 && data1 < 3 ) {
+        return 0;
+    }
+    else {
+        return data1;
+    }
 }
 
 void SPIAccelWriteToReg(int address, int data) {
